@@ -48,21 +48,21 @@ vector_db = PgVector(
 
 # Initialize knowledge base
 knowledge = Knowledge(
-    name="CEO Knowledge Base",
-    description="Comprehensive knowledge base for CEO Agent",
+    name="SwimBench AI knowledge base",
+    description="Comprehensive knowledge base for SwimBench AI",
     contents_db=supabase_db,
     vector_db=vector_db
 )
 
 # Initialize Agent with corrected model and improved instructions
-ceo_agent = Agent(
-    name="CEO Agent",
+swimbench_ai_agent = Agent(
+    name="SWIMBENCH AI",
     model=OpenAIChat(
         id="gpt-4o",  # Use valid model ID
         temperature=0.1
     ),
     instructions=[
-        "You are a knowledgeable CEO assistant with access to a comprehensive knowledge base.",
+        "You are a knowledgeable swimbench AI assistant with access to a comprehensive knowledge base.",
         "When answering questions, always search through your knowledge base first.",
         "Use the search_knowledge function to find relevant information.",
         "If you find relevant information in the knowledge base, use it to provide detailed answers with proper citations.",
@@ -70,8 +70,8 @@ ceo_agent = Agent(
         "For questions about knowledge base contents, try searching with broad terms like 'content', 'topics', or specific keywords.",
         "Always be helpful and provide the most comprehensive answer possible based on available knowledge."
     ],
-    description="Advanced CEO Agent with Knowledge Base Access",
-    user_id="ceo_user",
+    description="Advanced SWIMBENCH AI Agent with Knowledge Base Access",
+    user_id="swimbench_user",
     db=supabase_db,
     knowledge=knowledge,
     add_history_to_context=True,
@@ -83,9 +83,9 @@ ceo_agent = Agent(
 
 # Initialize AgentOS
 agent_os = AgentOS(
-    os_id="netcorobo",
-    description="NetcoRobo Enhanced",
-    agents=[ceo_agent],
+    os_id="swimbench-os",
+    description="SwimBench AI",
+    agents=[swimbench_ai_agent],
 )
 
 app = agent_os.get_app()
@@ -104,10 +104,8 @@ async def load_knowledge():
     """Load knowledge into the database"""
     try:
         logger.info("Starting knowledge loading process...")
-        
-        # Clear existing knowledge first (optional)
-        # await knowledge.clear()
-        
+        await knowledge.clear()
+
         # Load the Thai recipes PDF
         result1 = await knowledge.add_content_async(
             name="Thai Recipes Collection",
