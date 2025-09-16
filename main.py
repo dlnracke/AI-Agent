@@ -14,6 +14,7 @@ from agno.vectordb.pgvector import PgVector  # Remove SearchType import
 from fastapi import FastAPI, HTTPException
 from agno.tools.reasoning import ReasoningTools
 from agno.knowledge.embedder.openai import OpenAIEmbedder
+from agno.tools.postgres import PostgresTools
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +24,11 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 SUPABASE_CONNECTION_STRING = os.getenv("SUPABASE_CONNECTION_STRING")
+DATABASE_HOST = os.getenv("DATABASE_HOST")
+DATABASE_PORT = os.getenv("DATABASE_PORT")
+DATABASE_NAME = os.getenv("DATABASE_NAME")
+DATABASE_USER = os.getenv("DATABASE_USER")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
 ENV = os.getenv("ENV", "development")
 
 if not OPENAI_API_KEY:
@@ -54,11 +60,21 @@ knowledge = Knowledge(
     vector_db=vector_db
 )
 
+# Initialize PostgresTools with connection details
+postgres_tools = PostgresTools(
+    host=DATABASE_HOST,
+    port=DATABASE_PORT,
+    db_name=DATABASE_NAME,
+    user=DATABASE_USER,
+    password=DATABASE_PASSWORD,
+    table_schema="ai",
+)
+
 # Initialize Agent with corrected model and improved instructions
 swimbench_ai_agent = Agent(
     name="SWIMBENCH AI",
     model=OpenAIChat(
-        id="gpt-4o",  # Use valid model ID
+        id="gpt-4o", 
         temperature=0.1
     ),
     instructions=[
@@ -78,7 +94,7 @@ swimbench_ai_agent = Agent(
     num_history_runs=20,
     search_knowledge=True,  # This is crucial for knowledge base access
     markdown=True,
-    tools=[ReasoningTools()],
+    tools=[ReasoningTools(), postgres_tools],
 )
 
 # Initialize AgentOS
