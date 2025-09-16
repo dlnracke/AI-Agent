@@ -62,8 +62,10 @@ pluggy==1.6.0
 poetry==2.1.1
 poetry-core==2.1.1
 primp==0.15.0
+psycopg==3.2.10
 psycopg-binary==3.2.10
 psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pycountry==24.6.1
 pydantic==2.11.7
 pydantic-settings==2.10.1
@@ -102,6 +104,7 @@ trove-classifiers==2025.3.3.18
 typer==0.17.4
 typing-inspection==0.4.1
 typing_extensions==4.15.0
+tzdata==2025.2
 urllib3==2.3.0
 uvicorn==0.35.0
 virtualenv==20.29.2

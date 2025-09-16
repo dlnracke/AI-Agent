@@ -78,21 +78,23 @@ swimbench_ai_agent = Agent(
         temperature=0.1
     ),
     instructions=[
-        "You are a knowledgeable swimbench AI assistant with access to a comprehensive knowledge base.",
-        "When answering questions, always search through your knowledge base first.",
-        "Use the search_knowledge function to find relevant information.",
-        "If you find relevant information in the knowledge base, use it to provide detailed answers with proper citations.",
-        "If you cannot find specific information in the knowledge base, clearly state this and offer to help in other ways.",
-        "For questions about knowledge base contents, try searching with broad terms like 'content', 'topics', or specific keywords.",
-        "Always be helpful and provide the most comprehensive answer possible based on available knowledge."
+        "You are SWIMBENCH AI, an assistant that benchmarks swim performance times by event, age, gender, and ability.",
+        "Always start by checking if the user has provided the required inputs: event, age, and swim time. Gender and pool course (yards/meters) are optional but useful.",
+        "If required parameters are missing, ask the user a short, clear follow-up question to get the information. Do not guess silently.",
+        "When parameters are complete, call the appropriate Postgres tool to fetch standards and performance data from the Supabase database.",
+        "Use that data to calculate percentile ranking, skill level category (Beginner → Elite), and comparisons to USA Swimming standards (B, A, AA, AAA, AAAA).",
+        "If the sample size in the database is too small, broaden the search (e.g., nearby ages or both genders) and clearly explain this adjustment to the user.",
+        "Respond in a chat-style format with clear, encouraging explanations. Include key insights such as percentile rank, standard achieved, time needed for next standard, and college readiness indicators.",
+        "If a user asks a general question (not swim-related), answer politely but guide the conversation back to swim performance benchmarking.",
+        "Always provide outputs in markdown for readability, using short sections, emojis, and tables/charts if available."
     ],
-    description="Advanced SWIMBENCH AI Agent with Knowledge Base Access",
+    description="SWIMBENCH AI: Benchmarks swim times, calculates percentiles, and provides insights for athletes, coaches, and recruiters.",
     user_id="swimbench_user",
     db=supabase_db,
     knowledge=knowledge,
     add_history_to_context=True,
     num_history_runs=20,
-    search_knowledge=True,  # This is crucial for knowledge base access
+    search_knowledge=True,
     markdown=True,
     tools=[ReasoningTools(), postgres_tools],
 )
@@ -139,85 +141,6 @@ async def load_knowledge():
     except Exception as e:
         logger.error(f"Error loading knowledge: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error loading knowledge: {str(e)}")
-
-@app.get("/knowledge/status")
-async def get_knowledge_status():
-    """Check knowledge base status and list contents"""
-    try:
-        # Try to get knowledge contents
-        contents = []
-        try:
-            # This might vary based on your agno version
-            knowledge_items = await knowledge.get_contents_async(limit=20)
-            if knowledge_items:
-                contents = [
-                    {
-                        "name": getattr(item, 'name', 'Unknown'),
-                        "id": getattr(item, 'id', None),
-                        "metadata": getattr(item, 'metadata', {}),
-                        "content_preview": str(getattr(item, 'content', ''))[:200] + "..." if len(str(getattr(item, 'content', ''))) > 200 else str(getattr(item, 'content', ''))
-                    }
-                    for item in knowledge_items
-                ]
-        except Exception as e:
-            logger.warning(f"Could not retrieve knowledge contents: {e}")
-        
-        return {
-            "status": "success",
-            "knowledge_base_name": knowledge.name,
-            "description": knowledge.description,
-            "total_contents": len(contents),
-            "contents": contents
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting knowledge status: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error getting knowledge status: {str(e)}")
-
-@app.post("/knowledge/search")
-async def search_knowledge_direct(query: str, limit: int = 5):
-    """Direct knowledge search endpoint for testing"""
-    try:
-        logger.info(f"Searching knowledge base for: '{query}'")
-        
-        # Perform search
-        results = await knowledge.search_async(query=query, limit=limit)
-        
-        formatted_results = []
-        if results:
-            for i, result in enumerate(results):
-                formatted_results.append({
-                    "rank": i + 1,
-                    "content": str(getattr(result, 'content', result))[:500] + "..." if len(str(getattr(result, 'content', result))) > 500 else str(getattr(result, 'content', result)),
-                    "metadata": getattr(result, 'metadata', {}),
-                    "score": getattr(result, 'score', None)
-                })
-        
-        return {
-            "status": "success",
-            "query": query,
-            "results_count": len(formatted_results),
-            "results": formatted_results
-        }
-        
-    except Exception as e:
-        logger.error(f"Error searching knowledge: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error searching knowledge: {str(e)}")
-
-# Test endpoint for agent interaction
-@app.post("/test/agent")
-async def test_agent_knowledge(question: str):
-    """Test agent's knowledge base access"""
-    try:
-        # This would simulate asking the agent directly
-        # You might need to implement this based on your agno version
-        return {
-            "status": "info",
-            "message": "Use the main chat endpoint to interact with the agent",
-            "suggestion": f"Ask your question '{question}' through the agent interface"
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 # If you need to run locally, use this:
 if __name__ == "__main__":
