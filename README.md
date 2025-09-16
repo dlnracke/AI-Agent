@@ -1,2 +1,2 @@
-# AI-Projects
+# AI-Agent
 AI Research Projects
