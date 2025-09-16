@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SUPABASE_CONNECTION_STRING = os.getenv("SUPABASE_CONNECTION_STRING")
+DATABASE_CONNECTION_STRING = os.getenv("DATABASE_CONNECTION_STRING")
 DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASE_PORT = os.getenv("DATABASE_PORT")
 DATABASE_NAME = os.getenv("DATABASE_NAME")
@@ -34,21 +34,19 @@ ENV = os.getenv("ENV", "development")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY not set in .env")
 
-SUPABASE_DB_URL = (
-    SUPABASE_CONNECTION_STRING
+DB_URL = (
+    DATABASE_CONNECTION_STRING
 )
 
-# Initialize database connections
-supabase_db = PostgresDb(
-    db_url=SUPABASE_DB_URL,
+db = PostgresDb(
+    db_url=DB_URL,
     id="supabase-main",
     knowledge_table="knowledge_contents",
 )
 
-# Initialize vector database without SearchType
 vector_db = PgVector(
     table_name="vectors", 
-    db_url=SUPABASE_DB_URL,
+    db_url=DB_URL,
     embedder=OpenAIEmbedder(),
 )
 
@@ -56,7 +54,7 @@ vector_db = PgVector(
 knowledge = Knowledge(
     name="SwimBench AI knowledge base",
     description="Comprehensive knowledge base for SwimBench AI",
-    contents_db=supabase_db,
+    contents_db=db,
     vector_db=vector_db
 )
 
@@ -90,7 +88,7 @@ swimbench_ai_agent = Agent(
     ],
     description="SWIMBENCH AI: Benchmarks swim times, calculates percentiles, and provides insights for athletes, coaches, and recruiters.",
     user_id="swimbench_user",
-    db=supabase_db,
+    db=db,
     knowledge=knowledge,
     add_history_to_context=True,
     num_history_runs=20,
