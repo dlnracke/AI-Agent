@@ -169,10 +169,8 @@ swimbench_ai_agent = Agent(
     ],
 
     description="SWIMBENCH AI: Advanced swim performance benchmarking system with real USA Swimming and college recruiting data",
-    user_id="swimbench_user",
     db=db,
     knowledge=knowledge,
-    add_history_to_context=True,
     num_history_runs=15,
     search_knowledge=True,
     markdown=True,
