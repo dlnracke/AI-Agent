@@ -1,41 +1,29 @@
-# 🏊 Swim Benchmarking AI App
+# 🏊 Swimlytics.ai
 
-This project is an **AI-powered app** that helps swimmers, coaches, and recruiters understand where a swimmer stands compared to others.
+**Swimlytics.ai** is an intelligent swimming performance benchmarking system.  
+It compares a swimmer’s times against **USA Swimming motivational standards** and **college recruiting benchmarks**, then gives **percentiles, goals, and training focus**.
+---
 
-You can enter a swimmer's **age**, **event**, **gender**, and **swim time**, and the app will tell you:
-- Their percentile ranking (e.g., top 40% of peers)
-- Their skill category (Beginner → Elite)
-- How close they are to USA Swimming standards (B, A, AA, AAA, AAAA)
-- Insights about college readiness
+## ✨ Features
+
+  - ✅ Benchmark swim times vs. **USA Swimming Motivational Standards (2024–2028)**  
+  - ✅ Calculate **percentile rankings** for each event and age group  
+  - ✅ Analyze **college recruiting readiness** (D1, D2, D3)  
+  - ✅ Provide **next goal targets** (time drops to next standard)  
+  - ✅ Swimming knowledge base (training, stroke technique, strategy)  
+  - ✅ Built-in **API with FastAPI**  
+  - ✅ Fully **database-driven** (Postgres + pgvector)  
 
 ---
 
-## 📌 How the App Works
-
-1. The swimmer (or coach) enters:
-- Event (e.g., 100 Free)
-- Age (e.g., 16)
-- Gender (optional, e.g., M or F)
-- Time (e.g., 1:03.00)
-
-2. The app looks up two kinds of data:
-- Standards (e.g., USA Swimming motivational times for that event/age)
-- Peer results (swim times from other swimmers of the same age/event)
-
-3. The AI compares the input time against the database and calculates:
-- Percentile rank (how fast compared to others)
-- Standard level (B, A, AA, etc.)
-- Suggested goals (e.g., “You need to drop 2.1 seconds to hit AA”)
-
-4. The result is shown in a chat-style interface, like ChatGPT:
-
+## 🗂️ Project Structure
   ```
-    🏊 Your time of 1:03.00 puts you in the top 45% of girls age 16 in the 100 Free (SCY).
-    🎯 You’re 2.1 seconds away from the B standard.
-    🏫 Competitive for some Division 3 schools.
+    app/
+    │── main.py # Main FastAPI + AgentOS entrypoint
+    │── requirements.txt # Python dependencies
+    │── .env.example # Example environment variables
+    │── README.md # This documentation
   ```
-
----
 
 ## ⚙️ Setup Instructions
 Follow these steps. No advanced coding knowledge needed!
@@ -43,43 +31,64 @@ Follow these steps. No advanced coding knowledge needed!
 ### 1. Install Python
 Make sure you have Python 3.10+ installed.
 Check by running:
-```bash
-python --version
-```
+
+  ```bash
+    python --version
+  ```
 
 ### 2. Clone the Repository
 Download the project from GitHub:
-```bash
-git clone https://github.com/dlnracke/AI-Agent.git
-cd AI-Agent
-```
+
+  ```bash
+    git clone https://github.com/dlnracke/AI-Agent.git
+    cd AI-Agent
+  ```
 
 ### 3. Create a Virtual Environment
 This keeps your project’s libraries separate:
 
-```bash
-python -m venv venv
-source venv/bin/activate   # Mac/Linux
-venv\Scripts\activate      # Windows
-```
+  ```bash
+    python -m venv venv
+    source venv/bin/activate   # Mac/Linux
+    venv\Scripts\activate      # Windows
+  ```
 
 ### 4. Install Requirements
 
-```bash
-pip install -r requirements.txt
-```
+  ```bash
+    pip install -r requirements.txt
+  ```
 
-### 5. Add Environment Variables
-Copy .env.example → .env and fill in your Supabase URL and API Key.
-Example:
-```ini
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-secret-api-key
-```
+### 5. Configure Environment
+Create a .env file:
 
-### 6. Run the app
+  ```ini
+    OPENAI_API_KEY=sk-xxxxxx
+    DATABASE_CONNECTION_STRING=postgresql://user:password@host:5432/swimbench
+    DATABASE_HOST=your-database-host
+    DATABASE_PORT=your-database-port
+    DATABASE_NAME=your-database-name
+    DATABASE_USER=your-database-username
+    DATABASE_PASSWORD=your-database-password
+    ENV=development
+  ```
+
+### 6. Initialize Database
+In PostgreSQL:
+
+  ```sql
+    CREATE SCHEMA ai;
+
+    -- Example tables:
+    CREATE TABLE ai.usa_swimming_standards (...);
+    CREATE TABLE ai.college_recruiting_standards (...);
+    CREATE TABLE ai.performance_analyses (...);
+  ```
+
+### 7. Run the app
+
 ```bash
-python main.py
+  python main.py
 ```
 ---
 
@@ -90,3 +99,55 @@ python main.py
 
 ---
 
+## Example Usage
+Input(chat with agent):
+
+  ```
+    Benchmark my 100 freestyle, age 15, 54.21 seconds
+  ```
+
+Output:
+  ```
+    🏊‍♂️ Swim Performance Analysis
+
+    📊 Performance Summary
+      - Time: 54.21s (100 Free SCY)
+      - Percentile Ranking: Top 12%
+      - USA Swimming Standard: AAA
+      - Ability Level: Advanced
+
+      🎓 College Recruitment Analysis
+      - D1 Elite Programs: ❌ Not Qualified
+      - D1 Mid-Major: ✅ Qualified
+      - D2 Programs: ✅ Qualified
+      - D3 Programs: ✅ Qualified
+
+      🎯 Next Goals
+      - Next Standard: 53.09 (AAAA)
+      - Time Drop Needed: 1.12s
+      - Training Focus: Underwater efficiency and race pacing
+  ```
+---
+
+## 🗃️ Database Schema (AI Schema)
+
+  - ai.usa_swimming_standards → Motivational times (age, gender, course, event, levels)
+  - ai.college_recruiting_standards → Recruiting benchmarks for D1/D2/D3
+  - ai.performance_analyses → Stores results of swimmer benchmarks
+  - ai.swim_events → Standard list of events
+
+---
+
+## 🤝 Contributing
+
+  - Fork repo
+  - Create feature branch
+  - Submit pull request
+
+---
+
+## 📜 License
+
+MIT License. Free to use, modify, and distribute.
+
+---

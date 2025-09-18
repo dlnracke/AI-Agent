@@ -18,11 +18,15 @@ from agno.tools.reasoning import ReasoningTools
 from agno.knowledge.embedder.openai import OpenAIEmbedder
 from agno.tools.postgres import PostgresTools
 
-# Setup logging
+# ------------------------------------------------------------
+# 1. Logging Setup
+# ------------------------------------------------------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
+# ------------------------------------------------------------
+# 2. Environment Variables (Loaded from .env)
+# ------------------------------------------------------------
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DATABASE_CONNECTION_STRING = os.getenv("DATABASE_CONNECTION_STRING")
@@ -38,20 +42,25 @@ if not OPENAI_API_KEY:
 
 DB_URL = DATABASE_CONNECTION_STRING
 
-# Database and vector setup
+# ------------------------------------------------------------
+# 3. Database + VectorDB Setup
+# ------------------------------------------------------------
+
+# PostgreSQL database for structured data (swim standards, analyses, etc.)
 db = PostgresDb(
     db_url=DB_URL,
     id="swimbench-db",
     knowledge_table="knowledge_contents",
 )
 
+# pgvector database for embeddings and semantic search
 vector_db = PgVector(
     table_name="vectors", 
     db_url=DB_URL,
     embedder=OpenAIEmbedder(),
 )
 
-# Initialize knowledge base for swim performance data
+# Knowledge wrapper (structured + vector db combined)
 knowledge = Knowledge(
     name="SwimBench AI Knowledge Base",
     description="Comprehensive swim performance benchmarking knowledge including USA Swimming standards, college recruiting data, and performance analysis",
@@ -59,17 +68,21 @@ knowledge = Knowledge(
     vector_db=vector_db
 )
 
-# PostgreSQL tools for swim data queries
+# ------------------------------------------------------------
+# 4. Tools for Querying Postgres
+# ------------------------------------------------------------
 postgres_tools = PostgresTools(
     host=DATABASE_HOST,
     port=DATABASE_PORT,
     db_name=DATABASE_NAME,
     user=DATABASE_USER,
     password=DATABASE_PASSWORD,
-    table_schema="ai",
+    table_schema="ai", # all project tables live under schema "ai"
 )
 
-# Enhanced SwimBench AI Agent
+# ------------------------------------------------------------
+# 5. SwimBench Agent Configuration
+# ------------------------------------------------------------
 swimbench_ai_agent = Agent(
     name="SWIMBENCH AI",
     model=OpenAIChat(
@@ -171,22 +184,26 @@ swimbench_ai_agent = Agent(
     description="SWIMBENCH AI: Advanced swim performance benchmarking system with real USA Swimming and college recruiting data",
     db=db,
     knowledge=knowledge,
-    num_history_runs=15,
-    search_knowledge=True,
-    markdown=True,
+    num_history_runs=15,            # keep conversational memory
+    search_knowledge=True,          # enable retrieval from knowledge base
+    markdown=True,                  # respond with markdown formatting
     tools=[ReasoningTools(), postgres_tools],
 )
 
-# Initialize AgentOS
+# ------------------------------------------------------------
+# 6. AgentOS (Runtime Container)
+# ------------------------------------------------------------
 agent_os = AgentOS(
     os_id="swimbench-os",
     description="SwimBench AI Performance Benchmarking System",
     agents=[swimbench_ai_agent],
 )
 
-app = agent_os.get_app()
+app = agent_os.get_app() # get FastAPI app from AgentOS
 
-# CORS for production
+# ------------------------------------------------------------
+# 7. Middleware (CORS for frontend)
+# ------------------------------------------------------------
 if ENV == "production":
     app.add_middleware(
         CORSMiddleware,
@@ -196,14 +213,22 @@ if ENV == "production":
         allow_headers=["*"],
     )
 
+# ------------------------------------------------------------
+# 8. Custom Endpoints
+# ------------------------------------------------------------
 @app.post("/loadknowledge")
 async def load_knowledge():
-    """Load swim performance knowledge into the database"""
+    """
+    Endpoint to (re)load swim performance documents into the knowledge base.
+    Loads:
+      1. USA Swimming Motivational Standards
+      2. College recruiting times
+    """
     try:
         logger.info("Starting SwimBench knowledge loading...")
         await knowledge.clear()
 
-        # Load USA Swimming standards documentation
+        # Load USA Swimming standards
         result1 = await knowledge.add_content_async(
             name="USA Swimming Motivational Time Standards 2024-2028",
             url="https://websitedevsa.blob.core.windows.net/sitefinity/docs/default-source/timesdocuments/time-standards/2025/2028-motivational-standards-age-group.pdf",
@@ -215,7 +240,7 @@ async def load_knowledge():
             }
         )
         
-        # Load college recruiting information
+         # Load college recruiting standards
         result2 = await knowledge.add_content_async(
             name="College Swimming Recruiting Standards",
             url="https://www.ncsasports.org/mens-swimming/college-swimming-recruiting-times",
@@ -240,29 +265,6 @@ async def load_knowledge():
     except Exception as e:
         logger.error(f"Error loading SwimBench knowledge: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error loading knowledge: {str(e)}")
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "SwimBench AI",
-        "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/events")
-async def get_available_events():
-    """Get list of available swim events"""
-    try:
-        # This would query your ai.swim_events table
-        events = [
-            "50_freestyle", "100_freestyle", "200_freestyle", "500_freestyle", "1650_freestyle",
-            "100_backstroke", "200_backstroke", "100_breaststroke", "200_breaststroke",
-            "100_butterfly", "200_butterfly", "200_im", "400_im"
-        ]
-        return {"events": events}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 # Run the application
 if __name__ == "__main__":
