@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------
 # 2. Environment Variables (Loaded from .env)
+# Loads environments variables and keys.
 # ------------------------------------------------------------
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -44,6 +45,7 @@ DB_URL = DATABASE_CONNECTION_STRING
 
 # ------------------------------------------------------------
 # 3. Database + VectorDB Setup
+# Initializes PostgresDb(for structured data) and PgVector(for knowledge base)
 # ------------------------------------------------------------
 
 # PostgreSQL database for structured data (swim standards, analyses, etc.)
@@ -70,6 +72,7 @@ knowledge = Knowledge(
 
 # ------------------------------------------------------------
 # 4. Tools for Querying Postgres
+# Sets up PostgresTools and ReasoningTools so the agent can safely query DB and compute logic.
 # ------------------------------------------------------------
 postgres_tools = PostgresTools(
     host=DATABASE_HOST,
@@ -82,6 +85,8 @@ postgres_tools = PostgresTools(
 
 # ------------------------------------------------------------
 # 5. SwimBench Agent Configuration
+# Creates the Agent with a carefully written instructions block(this defines agent behavior and output format)
+# instructions: controls how the LLM behaves - adjust tone, rquired outputs, and error handling here.
 # ------------------------------------------------------------
 swimbench_ai_agent = Agent(
     name="SWIMBENCH AI",
